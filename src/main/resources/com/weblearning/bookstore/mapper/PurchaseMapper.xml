@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weblearning.bookstore.mapper.PurchaseMapper">
+
+    <insert id="addMissStraight" parameterType="com.weblearning.bookstore.pojo.Purchase">
+        INSERT INTO bookstore.missingbooks(book_name,publisher, book_id,
+                                           supplier_id, quantity, registration_date, user_id)
+        VALUES (#{bookName},#{publisher}, #{bookId}, #{supplierId},
+                #{quantity}, #{registrationDate}, #{userId})
+    </insert>
+    <insert id="addPurchase" parameterType="com.weblearning.bookstore.pojo.Purchase">
+        INSERT INTO bookstore.purchase( supplier_id, book_id, quantity,
+                                       price, order_date, status)
+        VALUES(#{supplierId}, #{bookId}, #{quantity}, #{price}, NOW(), #{status})
+    </insert>
+
+    <update id="updatePurchase">
+        UPDATE bookstore.purchase SET status = 'COMPLETED' WHERE purchase_order_id = #{purchaseOrderId}
+    </update>
+
+    <delete id="deletePurchase">
+        DELETE FROM bookstore.purchase WHERE purchase_order_id = #{purchaseOrderId}
+    </delete>
+
+    <delete id="deleteMissingBooks">
+        DELETE FROM bookstore.missingbooks WHERE book_id = #{bookId}
+    </delete>
+
+    <select id="getPurchaseById" resultType="com.weblearning.bookstore.pojo.Purchase">
+        SELECT * FROM bookstore.purchase WHERE purchase_order_id = #{purchaseOrderId}
+    </select>
+
+    <select id="getMissingBooksById" resultType="com.weblearning.bookstore.pojo.MissingBooks">
+        SELECT * FROM bookstore.missingbooks WHERE missing_book_id = #{missingBookId}
+    </select>
+
+
+</mapper>

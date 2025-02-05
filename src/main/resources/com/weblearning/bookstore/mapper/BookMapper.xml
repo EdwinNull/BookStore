@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.weblearning.bookstore.mapper.BookMapper">
+
+    <insert id = "addBook" parameterType="com.weblearning.bookstore.pojo.Books">
+            INSERT INTO bookstore.books(book_id, title, author1, author2, author3, author4,
+                                        publisher, price, keywords, table_of_contents,
+                                        cover_image, stock_quantity,supplier_id,
+                                        storage_location
+        )
+            VALUES(
+                #{bookId}, #{title}, #{author1}, #{author2}, #{author3}, #{author4},
+                #{publisher}, #{price}, #{keywords}, #{tableOfContents},
+                #{coverImage}, #{stockQuantity}, #{supplierId},
+                #{storageLocation}
+);
+    </insert>
+
+    <insert id="addSupplierBooks" parameterType="java.util.List">
+        <foreach collection="list" item="supplierBooks" separator=",">
+        INSERT INTO boostore.supplier_books (
+        supplier_id,book_id,  quantity, price
+        ) VALUES
+            (
+            #{supplierId}, #{bookId}, #{quantity}, #{price}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateBook">
+        UPDATE bookstore.books SET
+        <if test="title!= null and title!= ''">title = #{title},</if>
+        <if test="author1!= null and author1!= ''">author1 = #{author1},</if>
+                author2 = #{author2}, author3 = #{author3}, author4 = #{author4},
+        <if test="publisher!= null and publisher!= ''">publisher = #{publisher},</if>
+        <if test="price!= null and price!= ''">price = #{price},</if>
+                keywords = #{keywords}, table_of_contents = #{tableOfContents},cover_image = #{coverImage},
+        <if test="stockQuantity!= null and stockQuantity!= ''">stock_quantity = #{stockQuantity},</if>
+                supplier_id = #{supplierId},storage_location = #{storageLocation}
+                WHERE book_id = #{bookId}
+    </update>
+
+    <update id="updateQuantity">
+        UPDATE bookstore.books SET stock_quantity = #{stockQuantity} WHERE book_id = #{bookId}
+    </update>
+
+    <update id="increaseStock">
+        UPDATE bookstore.books SET stock_quantity = stock_quantity + #{quantity} WHERE book_id = #{bookId}
+    </update>
+
+    <delete id="deleteBook">
+        DELETE FROM bookstore.books WHERE book_id = #{bookId}
+    </delete>
+
+
+    <select id="findById" resultType="com.weblearning.bookstore.pojo.Books">
+        SELECT * FROM bookstore.books WHERE book_id = #{bookId}
+    </select>
+
+    <select id="getAllBooks" resultType="com.weblearning.bookstore.pojo.Books">
+         SELECT * FROM bookstore.books
+         <where>
+             <if test = "supplierId != null">
+                 supplier_id = #{supplierId}
+             </if>
+             <if test = "title != null">
+                 AND title = #{title}
+             </if>
+         </where>
+    </select>
+
+    <select id="findBookByName" resultType="com.weblearning.bookstore.pojo.Books">
+        SELECT * FROM bookstore.books WHERE 1=1
+        <if test="title != null and title != ''">
+            AND title LIKE CONCAT('%', #{title}, '%')
+        </if>
+        <if test="keywords != null and keywords != ''">
+            AND keywords LIKE CONCAT('%', #{keywords}, '%')
+        </if>
+        <if test="author1 != null and author1 != ''">
+            AND author1 LIKE CONCAT('%', #{author1}, '%')
+        </if>
+        <if test="author2 != null and author2 != ''">
+            AND author2 LIKE CONCAT('%', #{author2}, '%')
+        </if>
+        <if test="author3 != null and author3 != ''">
+            AND author3 LIKE CONCAT('%', #{author3}, '%')
+        </if>
+        <if test="author4 != null and author4 != ''">
+            AND author4 LIKE CONCAT('%', #{author4}, '%')
+        </if>
+        <if test="publisher != null and publisher != ''">
+            AND publisher LIKE CONCAT('%', #{publisher}, '%')
+        </if>
+        ORDER BY
+        CASE
+        WHEN title LIKE CONCAT('%', #{title}, '%') THEN 1
+        WHEN keywords LIKE CONCAT('%', #{keywords}, '%') THEN 2
+        WHEN author1 LIKE CONCAT('%', #{author1}, '%') THEN 3
+        WHEN author2 LIKE CONCAT('%', #{author2}, '%') THEN 4
+        WHEN author3 LIKE CONCAT('%', #{author3}, '%') THEN 5
+        WHEN author4 LIKE CONCAT('%', #{author4}, '%') THEN 6
+        WHEN publisher LIKE CONCAT('%', #{publisher}, '%') THEN 7
+        ELSE 8
+        END
+    </select>
+
+</mapper>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weblearning.bookstore.mapper.OrderMapper">
+
+    <insert id="addOrder">
+        INSERT INTO bookstore.orders (user_id,total_price, order_date, status)
+        VALUES (#{userId},#{finalPrice}, #{orderDate}, #{status})
+    </insert>
+
+    <insert id="addOrderDetails">
+        INSERT INTO bookstore.order_details (order_id, book_id, quantity, price)
+        VALUES (#{orderId},#{bookId},#{quantity},#{price})
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE bookstore.orders SET status = #{status} WHERE order_id = #{orderId}
+    </update>
+
+    <select id="findById" resultType="com.weblearning.bookstore.pojo.Order">
+        SELECT * FROM bookstore.orders WHERE order_id = #{orderId}
+    </select>
+
+    <select id="getLastInsertId" resultType="java.lang.Integer">
+        SELECT LAST_INSERT_ID()
+    </select>
+
+    <select id="getById" resultType="com.weblearning.bookstore.DTO.OrderDetailResponse">
+        SELECT user_id AS userId,total_price as finalPrice,order_date as orderDate,status as status from bookstore.orders where order_id = #{orderId}
+    </select>
+    <select id="getItemsByOrderId" resultType="com.weblearning.bookstore.DTO.OrderItemResponse">
+        SELECT book_id AS bookId,quantity AS quantity,price AS price from bookstore.order_details where order_id = #{orderId}
+    </select>
+
+</mapper>

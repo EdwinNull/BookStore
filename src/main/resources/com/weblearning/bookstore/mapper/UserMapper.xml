@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weblearning.bookstore.mapper.UserMapper">
+
+    <insert id="add" parameterType="com.weblearning.bookstore.pojo.User">
+        INSERT INTO bookstore.user (username, password) VALUES (#{username}, #{encodePassword})
+    </insert>
+
+    <update id="addBalance">
+        UPDATE bookstore.user SET user.account_balance = account_balance + #{balance} WHERE user_id = #{userId}
+    </update>
+
+    <update id="update">
+        UPDATE bookstore.user SET
+                                        username = #{username},
+                                        name = #{name},
+                                        address = #{address}
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updatePwd">
+        UPDATE bookstore.user SET password = #{encodePassword} WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateCreditLevel">
+        UPDATE bookstore.user SET credit_level = #{level},discount = #{discount} WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateOverBalance">
+        UPDATE bookstore.user SET over_balance = #{overBalance} WHERE user_id = #{userId}
+    </update>
+
+
+    <select id="findByUserName" resultType="com.weblearning.bookstore.pojo.User">
+        SELECT * FROM bookstore.user WHERE username = #{username}
+    </select>
+
+    <select id="findById" resultType="com.weblearning.bookstore.pojo.User">
+        SELECT * FROM bookstore.user WHERE user_id = #{userId}
+    </select>
+
+    <select id="findOrderByUserId" resultType="com.weblearning.bookstore.pojo.Order">
+        SELECT * FROM bookstore.orders WHERE user_id = #{userId}
+    </select>
+</mapper>

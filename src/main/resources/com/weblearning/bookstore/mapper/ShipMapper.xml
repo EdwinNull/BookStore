@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weblearning.bookstore.mapper.ShipMapper">
+
+    <insert id="addShip">
+        INSERT INTO bookstore.shipments(order_id, shipping_address, shipping_date,status)
+        VALUES (#{orderId}, #{address}, #{now},#{status})
+    </insert>
+    <select id="findByOrderId" resultType="com.weblearning.bookstore.pojo.Ship">
+        SELECT * FROM bookstore.shipments WHERE order_id = #{orderId}
+    </select>
+
+</mapper>
