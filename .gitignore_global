@@ -1,0 +1,180 @@
+# Global .gitignore for BookStore Project
+# This file contains commonly ignored patterns that can be used globally
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE Files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.netrwhist
+.vagrant/
+
+# Application Files
+*.tmp
+*.temp
+*.log
+*.bak
+*.backup
+*.cache
+
+# Sensitive Files and Configuration
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+*.p7b
+*.p7c
+*.p7s
+*.der
+.jks
+.keystore
+.truststore
+
+# Database Files
+*.db
+*.sqlite
+*.sqlite3
+*.mdb
+*.accdb
+*.frm
+*.myd
+*.myi
+*.ibd
+*.MAD
+*.MAI
+*.MRG
+*.TMM
+*.TMD
+*.TRI
+*.TRM
+*.ARM
+*.ARZ
+*.CSM
+*.CSV
+*.CTN
+*.OPT
+*.PAR
+*.FMM
+*.FM1
+
+# Temporary and Runtime Files
+tmp/
+temp/
+logs/
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Build and Output Files
+build/
+dist/
+out/
+target/
+bin/
+obj/
+release/
+
+# Dependency Directories
+node_modules/
+vendor/
+bower_components/
+third_party/
+
+# Package Manager Files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+composer.lock
+Gemfile.lock
+Podfile.lock
+Cargo.lock
+go.sum
+
+# Testing and Coverage
+coverage/
+.nyc_output/
+.test-results/
+junit.xml
+test-results/
+
+# Documentation Build
+docs/_build/
+site/_build/
+
+# Version Control
+.git/
+.gitattributes
+.gitignore
+.gitmodules
+.gitkeep
+
+# Project Configuration
+config.local.js
+config.dev.js
+config.prod.js
+config.test.js
+local.properties
+settings.local.py
+settings.dev.py
+settings.prod.py
+settings.test.py
+
+# Backup and Archive
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.dmg
+*.iso
+*.deb
+*.rpm
+*.msi
+*.exe
+
+# System and Network
+.network
+.ssh/
+.aws/
+.azure/
+.gcloud/
+.docker/
+
+# Cache and Session
+.cache/
+.sessions/
+.session-storage/
+*.cache
+*.session
+
+# Mobile Development
+.ios/
+.android/
+.cordova/
+.phonegap/
+ionic/
+capacitor/
+
+# Virtualization
+.vagrant/
+.virtualbox/
+.vmware/
+
+# Cloud and Deployment
+.serverless/
+.vercel/
+.next/
+.nuxt/

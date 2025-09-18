@@ -45,7 +45,7 @@
 ### 1. 数据库创建
 ```sql
 -- 执行数据库创建脚本
-mysql -u root -p < database/bookstore_schema.sql
+## mysql -u root -p < database/bookstore_schema.sql
 ```
 
 ### 2. Spring Boot配置
