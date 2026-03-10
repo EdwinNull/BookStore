@@ -101,9 +101,6 @@ public class AdminController {
         return Result.success(users);
     }
 
-    /**
-     * 添加用户余额
-     */
     @Operation(summary = "添加用户余额", description = "为指定用户添加余额，需要管理员权限")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "添加成功"),
