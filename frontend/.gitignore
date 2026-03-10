@@ -7,168 +7,18 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependencies
-node_modules/
-.pnp
-.pnp.js
-
-# Build outputs
-dist/
-build/
-.next/
-out/
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Cache and coverage
-.cache/
-.nyc_output/
-coverage/
-.tmp/
-
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Runtime data
-pids/
-*.pid
-*.seed
-*.pid.lock
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
+node_modules
 dist
-
-# Gatsby files
-.cache/
-public
-
-# Storybook build outputs
-.out
-.storybook-out
-
-# Temporary folders
-tmp/
-temp/
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Optional stylelint cache
-.stylelintcache
-
-# dotenv environment variables file
-.env.test
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# yarn v2
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-
-# Vue CLI
-vue-coverage/
-
-# Vite
-.vite/
-
-# Auto-generated files
-auto-imports.d.ts
-components.d.ts
-
-# Testing
-.coverage/
-junit.xml
-test-results/
-
-# Playwright
-/test-results/
-/playwright-report/
-/playwright/.cache/
-
-# Local development
-.local
-localhost*
+dist-ssr
+*.local
 
 # Editor directories and files
-.history/
-
-# Binary files (images, videos, etc.)
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.ico
-*.svg
-*.webp
-*.mp4
-*.mov
-*.avi
-*.mkv
-*.pdf
-*.zip
-*.tar.gz
-*.rar
-
-# Upload directories and files
-uploads/
-static/uploads/
-public/uploads/
-
-# Session data
-sessions/
-session-storage/
-
-# Log files
-debug.log
-verbose.log
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

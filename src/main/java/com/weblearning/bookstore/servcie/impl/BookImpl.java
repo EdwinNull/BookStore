@@ -51,8 +51,7 @@ public class BookImpl implements BookService {
     public PageBean<Books> getAllBooks(Integer pageNum, Integer pageSize, Integer supplierId, String title) {
         PageBean<Books> pageBean = new PageBean<>();
         PageHelper.startPage(pageNum, pageSize);
-        Map<String, Object> map = ThreadLocalUtil.get();
-        Integer userId = (Integer) map.get("id");
+        // 注意：此接口允许匿名访问，不需要用户登录信息
         List<Books> as = bookMapper.getAllBooks(supplierId,title);
         Page<Books> p = (Page<Books>) as;
         pageBean.setTotal(p.getTotal());

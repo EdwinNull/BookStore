@@ -1,0 +1,176 @@
+# =====================================================
+# Docker Compose 配置文件
+# 书店管理系统 - 前后端一键部署
+# =====================================================
+# 使用方式：
+#   开发环境：docker-compose up -d
+#   生产环境：docker-compose -f docker-compose.yml up -d
+#   停止服务：docker-compose down
+#   查看日志：docker-compose logs -f
+# =====================================================
+
+services:
+  # ============================================
+  # 后端服务 - Spring Boot 应用
+  # ============================================
+  backend-service:
+    # 构建配置
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # 容器名称
+    container_name: bookstore-backend
+
+    # 重启策略：总是重启
+    restart: always
+
+    # 端口映射（生产环境可移除，仅通过 Nginx 访问）
+    ports:
+      - "8080:8080"
+
+    # 环境变量配置
+    environment:
+      # JVM 参数
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
+
+      # Spring Boot 配置
+      - SPRING_PROFILES_ACTIVE=docker
+
+      # 数据库配置（使用 MySQL 容器）
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/bookstore?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=123456
+
+      # JWT 密钥（生产环境请修改！）
+      - JWT_SECRET=your-production-jwt-secret-key-change-me
+
+      # 时区设置
+      - TZ=Asia/Shanghai
+
+    # 依赖服务
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    # 网络配置
+    networks:
+      - bookstore-network
+
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ============================================
+  # 前端服务 - Nginx 静态资源
+  # ============================================
+  frontend-service:
+    # 构建配置
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # 构建时 API 地址（使用相对路径，通过 Nginx 代理）
+        - VITE_API_URL=/api
+
+    # 容器名称
+    container_name: bookstore-frontend
+
+    # 重启策略
+    restart: always
+
+    # 端口映射
+    ports:
+      - "80:80"
+
+    # 依赖后端服务
+    depends_on:
+      backend-service:
+        condition: service_healthy
+
+    # 网络配置
+    networks:
+      - bookstore-network
+
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # ============================================
+  # MySQL 数据库服务
+  # ============================================
+  mysql:
+    # 使用 MySQL 8.0
+    image: mysql:8.0
+
+    # 容器名称
+    container_name: bookstore-mysql
+
+    # 重启策略
+    restart: always
+
+    # 端口映射（生产环境建议移除）
+    ports:
+      - "3306:3306"
+
+    # 环境变量
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=bookstore
+      - TZ=Asia/Shanghai
+
+    # 数据持久化
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # 初始化脚本（如果有的话）
+      # - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    # 网络配置
+    networks:
+      - bookstore-network
+
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================
+  # Redis 缓存服务（可选）
+  # ============================================
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: bookstore-redis
+  #   restart: always
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - bookstore-network
+
+# ============================================
+# 网络配置
+# ============================================
+networks:
+  bookstore-network:
+    driver: bridge
+    name: bookstore-network
+
+# ============================================
+# 数据卷配置
+# ============================================
+volumes:
+  mysql-data:
+    name: bookstore-mysql-data
+  # redis-data:
+  #   name: bookstore-redis-data

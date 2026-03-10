@@ -6,43 +6,86 @@
 <mapper namespace="com.weblearning.bookstore.mapper.UserMapper">
 
     <insert id="add" parameterType="com.weblearning.bookstore.pojo.User">
-        INSERT INTO bookstore.user (username, password) VALUES (#{username}, #{encodePassword})
+        INSERT INTO bookstore.users (username, password) VALUES (#{username}, #{encodePassword})
     </insert>
 
     <update id="addBalance">
-        UPDATE bookstore.user SET user.account_balance = account_balance + #{balance} WHERE user_id = #{userId}
+        UPDATE bookstore.users SET users.account_balance = account_balance + #{balance} WHERE user_id = #{userId}
     </update>
 
+    <!-- 选择性更新用户信息：只更新传入的非空字段 -->
     <update id="update">
-        UPDATE bookstore.user SET
-                                        username = #{username},
-                                        name = #{name},
-                                        address = #{address}
+        UPDATE bookstore.users
+        <set>
+            <if test="user.username != null and user.username != ''">
+                username = #{user.username},
+            </if>
+            <if test="user.name != null and user.name != ''">
+                name = #{user.name},
+            </if>
+            <if test="user.address != null and user.address != ''">
+                address = #{user.address},
+            </if>
+            <if test="user.accountBalance != null">
+                account_balance = #{user.accountBalance},
+            </if>
+            <if test="user.creditLevel != null">
+                credit_level = #{user.creditLevel},
+            </if>
+            <if test="user.discount != null">
+                discount = #{user.discount},
+            </if>
+            <if test="user.overBalance != null">
+                over_balance = #{user.overBalance},
+            </if>
+            <if test="user.role != null and user.role != ''">
+                role = #{user.role},
+            </if>
+        </set>
         WHERE user_id = #{userId}
     </update>
 
     <update id="updatePwd">
-        UPDATE bookstore.user SET password = #{encodePassword} WHERE user_id = #{userId}
+        UPDATE bookstore.users SET password = #{encodePassword} WHERE user_id = #{userId}
     </update>
 
     <update id="updateCreditLevel">
-        UPDATE bookstore.user SET credit_level = #{level},discount = #{discount} WHERE user_id = #{userId}
+        UPDATE bookstore.users SET credit_level = #{level},discount = #{discount} WHERE user_id = #{userId}
     </update>
 
     <update id="updateOverBalance">
-        UPDATE bookstore.user SET over_balance = #{overBalance} WHERE user_id = #{userId}
+        UPDATE bookstore.users SET over_balance = #{overBalance} WHERE user_id = #{userId}
     </update>
 
 
     <select id="findByUserName" resultType="com.weblearning.bookstore.pojo.User">
-        SELECT * FROM bookstore.user WHERE username = #{username}
+        SELECT * FROM bookstore.users WHERE username = #{username}
     </select>
 
     <select id="findById" resultType="com.weblearning.bookstore.pojo.User">
-        SELECT * FROM bookstore.user WHERE user_id = #{userId}
+        SELECT * FROM bookstore.users WHERE user_id = #{userId}
     </select>
 
     <select id="findOrderByUserId" resultType="com.weblearning.bookstore.pojo.Order">
         SELECT * FROM bookstore.orders WHERE user_id = #{userId}
+    </select>
+
+    <!-- 获取用户列表（带条件搜索） -->
+    <select id="getUserList" resultType="com.weblearning.bookstore.pojo.User">
+        SELECT * FROM bookstore.users
+        <where>
+            <if test="username != null and username != ''">
+                username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="role != null and role != ''">
+                AND role = #{role}
+            </if>
+        </where>
+        ORDER BY user_id DESC
+    </select>
+
+    <!-- 获取所有用户 -->
+    <select id="getAllUsers" resultType="com.weblearning.bookstore.pojo.User">
+        SELECT * FROM bookstore.users ORDER BY user_id DESC
     </select>
 </mapper>

@@ -1,5 +1,7 @@
 package com.weblearning.bookstore.servcie.impl;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.weblearning.bookstore.DTO.OrderDetailResponse;
 import com.weblearning.bookstore.DTO.OrderItemResponse;
 import com.weblearning.bookstore.mapper.BookMapper;
@@ -75,7 +77,9 @@ public class OrderServiceImpl implements OrderService {
                 userMapper.updateOverBalance(userId,500.00);
             }
         }
-        String status = "待发货";
+        // 订单状态使用数据库ENUM定义的值: pending, confirmed, processing, shipped, delivered, cancelled
+        // "待发货" 对应 "confirmed"（已确认，待发货）
+        String status = "confirmed";
         orderMapper.addOrder(userId,finalPrice,LocalDateTime.now(),status);
         Integer orderId = orderMapper.getLastInsertId();
         for(OrderDetails item: order.getItems()){
@@ -95,5 +99,51 @@ public class OrderServiceImpl implements OrderService {
         List<OrderItemResponse> items = orderMapper.getItemsByOrderId(orderId);
         orderDetails.setItems(items);
         return orderDetails;
+    }
+
+    /**
+     * 获取用户的订单列表（分页）
+     */
+    @Override
+    public PageBean<Order> getUserOrderList(Integer userId, Integer pageNum, Integer pageSize) {
+        // 创建PageBean对象
+        PageBean<Order> pageBean = new PageBean<>();
+
+        // 使用PageHelper进行分页
+        PageHelper.startPage(pageNum, pageSize);
+
+        // 查询用户的订单列表
+        List<Order> orders = orderMapper.findByUserId(userId);
+
+        // 获取分页信息
+        Page<Order> page = (Page<Order>) orders;
+
+        pageBean.setTotal(page.getTotal());
+        pageBean.setItems(page.getResult());
+
+        return pageBean;
+    }
+
+    /**
+     * 获取所有订单列表（管理员用，分页）
+     */
+    @Override
+    public PageBean<Order> getAllOrderList(Integer pageNum, Integer pageSize, String status) {
+        // 创建PageBean对象
+        PageBean<Order> pageBean = new PageBean<>();
+
+        // 使用PageHelper进行分页
+        PageHelper.startPage(pageNum, pageSize);
+
+        // 查询订单列表
+        List<Order> orders = orderMapper.findAllOrders(status);
+
+        // 获取分页信息
+        Page<Order> page = (Page<Order>) orders;
+
+        pageBean.setTotal(page.getTotal());
+        pageBean.setItems(page.getResult());
+
+        return pageBean;
     }
 }

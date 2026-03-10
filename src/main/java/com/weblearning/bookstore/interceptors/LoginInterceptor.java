@@ -22,6 +22,13 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String token = request.getHeader("Authorization");
+        //截取后缀
+        if(token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        } else {
+            response.setStatus(401);
+            return false;
+        }
         try {
             //从redis获取相同token
             ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();

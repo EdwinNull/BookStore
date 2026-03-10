@@ -1,86 +1,132 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
-import { ElMessage } from 'element-plus'
-import router from '@/router'
-import { useAuthStore } from '@/stores/auth'
+/**
+ * Axios 实例封装
+ * 统一处理请求拦截、响应拦截、错误处理
+ */
+import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
+import type { Result } from '@/types';
 
-// 创建axios实例
-const request: AxiosInstance = axios.create({
-  baseURL: '/api',
-  timeout: 10000,
+// 创建 axios 实例
+const instance: AxiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+  timeout: 15000,
   headers: {
-    'Content-Type': 'application/json'
-  }
-})
+    'Content-Type': 'application/json',
+  },
+});
 
-// 请求拦截器
-request.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
-    // 从localStorage获取token
-    const token = localStorage.getItem('token')
-
-    if (token && config.headers) {
-      config.headers['Authorization'] = token
+// 请求拦截器 - 添加 Token
+instance.interceptors.request.use(
+  (config) => {
+    // 从 localStorage 获取 token
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-
-    return config
+    // 调试：打印请求信息
+    console.log('[Request]', config.method?.toUpperCase(), config.url, config.data);
+    return config;
   },
   (error) => {
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-// 响应拦截器
-request.interceptors.response.use(
-  (response: AxiosResponse) => {
-    const res = response.data
+// 响应拦截器 - 统一处理响应和错误
+instance.interceptors.response.use(
+  (response: AxiosResponse<Result>) => {
+    // 调试：打印响应信息
+    console.log('[Response]', response.status, response.config.url, response.data);
 
-    // 如果返回的code不是200，说明有错误
-    if (res.code !== 200) {
-      ElMessage.error(res.message || '请求失败')
+    const { data } = response;
 
-      // 401: 未登录或token过期
-      if (res.code === 401) {
-        const authStore = useAuthStore()
-        authStore.logout()
-      }
-
-      return Promise.reject(new Error(res.message || '请求失败'))
+    // 业务状态码判断
+    if (data.code === 0) {
+      return response;
     }
 
-    return res
+    // 业务错误
+    console.error('[Business Error]', data.code, data.message);
+    return Promise.reject(new Error(data.message || '请求失败'));
   },
-  (error) => {
-    // 处理网络错误
+  (error: AxiosError<Result>) => {
+    // 调试：打印错误信息
+    console.error('[HTTP Error]', error.message, error.response?.status, error.response?.data);
+
+    // HTTP 错误处理
     if (error.response) {
-      switch (error.response.status) {
+      const { status, data } = error.response;
+
+      switch (status) {
         case 401:
-          ElMessage.error('未登录或登录已过期')
-          const authStore = useAuthStore()
-          authStore.logout()
-          break
+          // 未授权，清除 token 并跳转登录
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          return Promise.reject(new Error('登录已过期，请重新登录'));
         case 403:
-          ElMessage.error('没有权限访问')
-          router.push('/unauthorized')
-          break
+          return Promise.reject(new Error('没有权限访问'));
         case 404:
-          ElMessage.error('请求的资源不存在')
-          break
+          return Promise.reject(new Error('请求的资源不存在'));
         case 500:
-          ElMessage.error('服务器内部错误')
-          break
+          return Promise.reject(new Error('服务器错误'));
         default:
-          ElMessage.error(error.response.data?.message || '请求失败')
+          return Promise.reject(new Error(data?.message || `请求失败 (${status})`));
       }
-    } else if (error.request) {
-      // 请求已发出但没有收到响应
-      ElMessage.error('网络连接失败，请检查网络设置')
-    } else {
-      // 请求配置出错
-      ElMessage.error('请求配置错误')
     }
 
-    return Promise.reject(error)
-  }
-)
+    // 网络错误
+    if (error.message.includes('timeout')) {
+      return Promise.reject(new Error('请求超时，请稍后重试'));
+    }
 
-export default request
+    if (error.message.includes('Network Error')) {
+      return Promise.reject(new Error('网络连接失败，请检查网络'));
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * 封装 GET 请求
+ */
+export async function get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  const response = await instance.get<Result<T>>(url, config);
+  console.log('[GET Result]', url, '->', response.data.data);
+  return response.data.data;
+}
+
+/**
+ * 封装 POST 请求
+ */
+export async function post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  const response = await instance.post<Result<T>>(url, data, config);
+  console.log('[POST Result]', url, '->', response.data.data);
+  return response.data.data;
+}
+
+/**
+ * 封装 PUT 请求
+ */
+export async function put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  const response = await instance.put<Result<T>>(url, data, config);
+  return response.data.data;
+}
+
+/**
+ * 封装 PATCH 请求
+ */
+export async function patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  const response = await instance.patch<Result<T>>(url, data, config);
+  return response.data.data;
+}
+
+/**
+ * 封装 DELETE 请求
+ */
+export async function del<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  const response = await instance.delete<Result<T>>(url, config);
+  return response.data.data;
+}
+
+export default instance;

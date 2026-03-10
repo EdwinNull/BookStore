@@ -5,12 +5,25 @@
 
 <mapper namespace="com.weblearning.bookstore.mapper.ShipMapper">
 
+    <!-- 添加物流记录 -->
     <insert id="addShip">
-        INSERT INTO bookstore.shipments(order_id, shipping_address, shipping_date,status)
-        VALUES (#{orderId}, #{address}, #{now},#{status})
+        INSERT INTO bookstore.shipments(order_id, shipping_address, shipping_date, status)
+        VALUES (#{orderId}, #{address}, #{now}, #{status})
     </insert>
+
+    <!-- 根据订单ID查询最新一条物流（兼容旧接口） -->
     <select id="findByOrderId" resultType="com.weblearning.bookstore.pojo.Ship">
-        SELECT * FROM bookstore.shipments WHERE order_id = #{orderId}
+        SELECT * FROM bookstore.shipments
+        WHERE order_id = #{orderId}
+        ORDER BY shipping_date DESC
+        LIMIT 1
+    </select>
+
+    <!-- 根据订单ID查询所有物流记录（支持一个订单多次发货） -->
+    <select id="findAllByOrderId" resultType="com.weblearning.bookstore.pojo.Ship">
+        SELECT * FROM bookstore.shipments
+        WHERE order_id = #{orderId}
+        ORDER BY shipping_date DESC
     </select>
 
 </mapper>

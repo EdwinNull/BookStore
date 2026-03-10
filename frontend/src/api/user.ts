@@ -1,34 +1,45 @@
-import request from '@/utils/request'
-import type { User, LoginRequest, RegisterRequest, ApiResponse } from '@/types'
+/**
+ * 用户相关 API
+ */
+import { get, post, put, patch } from '@/utils/request';
+import type {
+  User,
+  LoginParams,
+  RegisterParams,
+  UpdatePwdParams,
+} from '@/types';
 
-export const userApi = {
-  // 用户注册
-  register(data: RegisterRequest) {
-    return request.post<ApiResponse<string>>('/register', data)
-  },
+/**
+ * 用户登录
+ */
+export function login(params: LoginParams): Promise<string> {
+  return post('/api/login', params);
+}
 
-  // 用户登录
-  login(data: LoginRequest) {
-    return request.post<ApiResponse<string>>('/login', data)
-  },
+/**
+ * 用户注册
+ */
+export function register(params: RegisterParams): Promise<void> {
+  return post('/api/register', params);
+}
 
-  // 管理员登录
-  adminLogin(data: LoginRequest) {
-    return request.post<ApiResponse<string>>('/admin/login', data)
-  },
+/**
+ * 获取当前用户信息
+ */
+export function getUserInfo(): Promise<User> {
+  return get('/api/user/userInfo');
+}
 
-  // 获取用户信息
-  getUserInfo() {
-    return request.get<ApiResponse<User>>('/user/userInfo')
-  },
+/**
+ * 更新用户信息
+ */
+export function updateUser(user: Partial<User>): Promise<void> {
+  return put('/api/user/update', user);
+}
 
-  // 更新用户信息
-  updateUser(data: Partial<User>) {
-    return request.put<ApiResponse<string>>('/user/update', data)
-  },
-
-  // 修改密码
-  updatePassword(data: { old_pwd: string; new_pwd: string; re_pwd: string }) {
-    return request.patch<ApiResponse<string>>('/user/updatePwd', data)
-  }
+/**
+ * 修改密码
+ */
+export function updatePassword(params: UpdatePwdParams): Promise<void> {
+  return patch('/api/user/updatePwd', params);
 }

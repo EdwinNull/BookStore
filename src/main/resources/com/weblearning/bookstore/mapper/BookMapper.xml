@@ -18,13 +18,14 @@
 );
     </insert>
 
+    <!-- 批量插入供应商图书信息 -->
     <insert id="addSupplierBooks" parameterType="java.util.List">
-        <foreach collection="list" item="supplierBooks" separator=",">
-        INSERT INTO boostore.supplier_books (
-        supplier_id,book_id,  quantity, price
+        INSERT INTO bookstore.supplier_books (
+            supplier_id, book_id, quantity, price
         ) VALUES
+        <foreach collection="list" item="item" separator=",">
             (
-            #{supplierId}, #{bookId}, #{quantity}, #{price}
+                #{item.supplierName}, #{item.bookName}, #{item.quantity}, #{item.price}
             )
         </foreach>
     </insert>

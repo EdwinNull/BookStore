@@ -1,47 +1,60 @@
-import request from '@/utils/request'
-import type { Book, PageBean, BookSearchParams, SupplierBooks, ApiResponse } from '@/types'
+/**
+ * 图书相关 API
+ */
+import { get, post, put, del } from '@/utils/request';
+import type {
+  Book,
+  PageBean,
+  BookSearchParams,
+  BookListParams,
+  SupplierBooks,
+} from '@/types';
 
-export const bookApi = {
-  // 获取图书列表
-  getBooks(params: BookSearchParams) {
-    return request.get<ApiResponse<PageBean<Book>>>('/books', { params })
-  },
+/**
+ * 获取图书列表（分页）
+ */
+export function getBookList(params?: BookListParams): Promise<PageBean<Book>> {
+  return get('/api/books', { params });
+}
 
-  // 获取图书详情
-  getBookDetail(bookId: number) {
-    return request.get<ApiResponse<Book>>(`/books/${bookId}`)
-  },
+/**
+ * 获取图书详情
+ */
+export function getBookDetail(bookId: number): Promise<Book> {
+  return get(`/api/books/${bookId}`);
+}
 
-  // 添加图书
-  addBook(book: Partial<Book>) {
-    return request.post<ApiResponse<string>>('/books/add', book)
-  },
+/**
+ * 搜索图书
+ */
+export function searchBooks(params: BookSearchParams): Promise<Book[]> {
+  return get('/api/books/findBook', { params });
+}
 
-  // 更新图书
-  updateBook(book: Partial<Book>) {
-    return request.put<ApiResponse<string>>('/books/update', book)
-  },
+/**
+ * 添加图书
+ */
+export function addBook(book: Partial<Book>): Promise<void> {
+  return post('/api/books/add', book);
+}
 
-  // 删除图书
-  deleteBook(bookId: number) {
-    return request.delete<ApiResponse<string>>(`/books/delete/${bookId}`)
-  },
+/**
+ * 更新图书
+ */
+export function updateBook(book: Partial<Book>): Promise<void> {
+  return put('/api/books/update', book);
+}
 
-  // 搜索图书
-  searchBooks(params: {
-    title?: string
-    keywords?: string
-    author1?: string
-    author2?: string
-    author3?: string
-    author4?: string
-    publisher?: string
-  }) {
-    return request.get<ApiResponse<Book[]>>('/books/findBook', { params })
-  },
+/**
+ * 删除图书
+ */
+export function deleteBook(bookId: number): Promise<void> {
+  return del(`/api/books/delete/${bookId}`);
+}
 
-  // 添加供应商图书关系
-  addSupplierBooks(supplierBooks: SupplierBooks[]) {
-    return request.post<ApiResponse<string>>('/books/addSupplierBooks', supplierBooks)
-  }
+/**
+ * 添加供应商图书关联
+ */
+export function addSupplierBooks(supplierBooks: SupplierBooks[]): Promise<void> {
+  return post('/api/books/addSupplierBooks', supplierBooks);
 }

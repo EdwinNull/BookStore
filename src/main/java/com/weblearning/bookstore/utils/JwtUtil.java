@@ -13,8 +13,8 @@ public class JwtUtil {
 	//接收业务数据,生成token并返回
     public static String genToken(Map<String, Object> claims) {
         return JWT.create()
-                .withClaim("claims", claims)
-                .withExpiresAt(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .withClaim("claims", claims)  // 修复：使用 "claims" 作为 key，与 parseToken 保持一致
+                .withExpiresAt(new Date(System.currentTimeMillis() + 12 * 1000 * 60 * 60))
                 .sign(Algorithm.HMAC256(KEY));
     }
 
