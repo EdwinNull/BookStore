@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 供应商服务实现类
+ */
 @Service
 public class SupplierServiceImpl implements SupplierService {
 
@@ -21,6 +24,10 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     public void addSupplier(Suppliers supplier) {
+        // 如果没有设置状态，默认为 active（管理员直接添加）
+        if (supplier.getStatus() == null || supplier.getStatus().isEmpty()) {
+            supplier.setStatus("active");
+        }
         supplierMapper.addSupplier(supplier);
     }
 
@@ -36,9 +43,26 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     public Suppliers findByName(String name) {
-        Suppliers supplier = supplierMapper.findByName(name);
-        return supplier;
+        return supplierMapper.findByName(name);
     }
 
+    @Override
+    public List<Suppliers> findAll() {
+        return supplierMapper.findAll();
+    }
 
+    @Override
+    public List<Suppliers> findByStatus(String status) {
+        return supplierMapper.findByStatus(status);
+    }
+
+    @Override
+    public void updateStatus(Integer id, String status) {
+        supplierMapper.updateStatus(id, status);
+    }
+
+    @Override
+    public Suppliers findById(Integer id) {
+        return supplierMapper.findById(id);
+    }
 }

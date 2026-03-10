@@ -99,7 +99,7 @@ export function OrderManagement() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">订单ID</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">用户ID</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">用户</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">金额</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">状态</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">下单时间</th>
@@ -112,7 +112,9 @@ export function OrderManagement() {
                     return (
                       <tr key={order.orderId} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm font-medium">{order.orderId}</td>
-                        <td className="px-4 py-3 text-sm">{order.userId}</td>
+                        <td className="px-4 py-3 text-sm">
+                          {order.username || `用户ID: ${order.userId}`}
+                        </td>
                         <td className="px-4 py-3 text-sm text-red-500">
                           ¥{order.totalPrice?.toFixed(2) || '0.00'}
                         </td>
@@ -167,8 +169,8 @@ export function OrderManagement() {
 
               <div className="space-y-2 mb-4 text-sm">
                 <p>
-                  <span className="text-gray-500">用户ID：</span>
-                  {selectedOrder.userId}
+                  <span className="text-gray-500">用户：</span>
+                  {selectedOrder.username || selectedOrder.realName || `用户ID: ${selectedOrder.userId}`}
                 </p>
                 <p>
                   <span className="text-gray-500">状态：</span>
@@ -193,8 +195,10 @@ export function OrderManagement() {
                 <div className="space-y-2 max-h-48 overflow-auto">
                   {selectedOrder.items?.map((item, index) => (
                     <div key={index} className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded">
-                      <span>图书ID: {item.bookId}</span>
-                      <span>× {item.quantity}</span>
+                      <div className="flex-1">
+                        <span className="text-gray-800">{item.bookTitle || `图书ID: ${item.bookId}`}</span>
+                      </div>
+                      <span className="text-gray-500 mx-2">× {item.quantity}</span>
                       <span className="text-red-500">¥{item.price?.toFixed(2) || '0.00'}</span>
                     </div>
                   ))}

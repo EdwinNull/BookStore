@@ -27,11 +27,31 @@
         SELECT LAST_INSERT_ID()
     </select>
 
+    <!-- 获取订单详情（包含用户信息） -->
     <select id="getById" resultType="com.weblearning.bookstore.DTO.OrderDetailResponse">
-        SELECT user_id AS userId,total_price as finalPrice,order_date as orderDate,status as status from bookstore.orders where order_id = #{orderId}
+        SELECT
+            o.user_id AS userId,
+            u.username AS username,
+            u.name AS realName,
+            o.total_price AS finalPrice,
+            o.order_date AS orderDate,
+            o.status AS status
+        FROM bookstore.orders o
+        LEFT JOIN bookstore.users u ON o.user_id = u.user_id
+        WHERE o.order_id = #{orderId}
     </select>
+
+    <!-- 获取订单项列表（包含图书信息） -->
     <select id="getItemsByOrderId" resultType="com.weblearning.bookstore.DTO.OrderItemResponse">
-        SELECT book_id AS bookId,quantity AS quantity,price AS price from bookstore.order_details where order_id = #{orderId}
+        SELECT
+            od.book_id AS bookId,
+            b.title AS bookTitle,
+            b.cover_image AS coverImage,
+            od.quantity AS quantity,
+            od.price AS price
+        FROM bookstore.order_details od
+        LEFT JOIN bookstore.books b ON od.book_id = b.book_id
+        WHERE od.order_id = #{orderId}
     </select>
 
     <!-- 根据用户ID查询订单列表 -->
@@ -39,15 +59,23 @@
         SELECT * FROM bookstore.orders WHERE user_id = #{userId} ORDER BY order_date DESC
     </select>
 
-    <!-- 获取所有订单列表（带状态筛选） -->
+    <!-- 获取所有订单列表（带状态筛选，包含用户名） -->
     <select id="findAllOrders" resultType="com.weblearning.bookstore.pojo.Order">
-        SELECT * FROM bookstore.orders
+        SELECT
+            o.order_id AS orderId,
+            o.user_id AS userId,
+            u.username AS username,
+            o.total_price AS totalPrice,
+            o.order_date AS orderDate,
+            o.status AS status
+        FROM bookstore.orders o
+        LEFT JOIN bookstore.users u ON o.user_id = u.user_id
         <where>
             <if test="status != null and status != ''">
-                status = #{status}
+                o.status = #{status}
             </if>
         </where>
-        ORDER BY order_date DESC
+        ORDER BY o.order_date DESC
     </select>
 
 </mapper>

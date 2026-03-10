@@ -6,13 +6,16 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardBody, Button, Loading, Empty } from '@/components/common';
 import { message } from '@/components/common/Message';
 import { getMyOrders, getOrderDetail } from '@/api/order';
+import { confirmReceive } from '@/api/discount';
 import { useAuthStore } from '@/stores';
 import type { Order, PageBean, OrderDetailResponse } from '@/types';
 
 // 订单状态映射
 const statusMap: Record<string, { label: string; color: string }> = {
   pending: { label: '待处理', color: 'text-yellow-600 bg-yellow-50' },
+  confirmed: { label: '待发货', color: 'text-orange-600 bg-orange-50' },
   shipped: { label: '已发货', color: 'text-blue-600 bg-blue-50' },
+  delivered: { label: '已送达', color: 'text-green-600 bg-green-50' },
   completed: { label: '已完成', color: 'text-green-600 bg-green-50' },
   cancelled: { label: '已取消', color: 'text-gray-600 bg-gray-50' },
 };
@@ -29,6 +32,7 @@ export function OrdersPage() {
   // 订单详情弹窗
   const [selectedOrder, setSelectedOrder] = useState<OrderDetailResponse | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [confirmingOrderId, setConfirmingOrderId] = useState<number | null>(null);
 
   // 路由保护：未登录时跳转到登录页
   useEffect(() => {
@@ -74,6 +78,28 @@ export function OrdersPage() {
       return new Date(dateStr).toLocaleString('zh-CN');
     } catch {
       return dateStr;
+    }
+  };
+
+  /**
+   * 确认收货
+   * @param orderId 订单ID
+   */
+  const handleConfirmReceive = async (orderId: number) => {
+    try {
+      setConfirmingOrderId(orderId);
+      const res = await confirmReceive(orderId);
+      if (res.data.code === 0) {
+        message.success('确认收货成功，消费金额已累计');
+        // 刷新订单列表
+        fetchOrders();
+      } else {
+        message.error(res.data.message || '确认收货失败');
+      }
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '确认收货失败');
+    } finally {
+      setConfirmingOrderId(null);
     }
   };
 
@@ -124,6 +150,15 @@ export function OrdersPage() {
                       >
                         查看详情
                       </Button>
+                      {/* 鷻加确认收货按钮（阶段三） */}
+                      {order.status === 'shipped' && (
+                        <Button
+                          onClick={() => handleConfirmReceive(order.orderId)}
+                          loading={confirmingOrderId === order.orderId}
+                        >
+                          确认收货
+                        </Button>
+                      )}
                     </div>
                   </CardBody>
                 </Card>
@@ -205,17 +240,27 @@ export function OrdersPage() {
                   <div className="space-y-2">
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between text-sm">
-                        <span className="text-gray-600">
-                          图书ID: {item.bookId} × {item.quantity}
+                        <span className="text-gray-800">
+                          {item.bookTitle || `图书ID: ${item.bookId}`}
                         </span>
-                        <span>¥{item.price?.toFixed(2)}</span>
+                        <span className="text-gray-500">× {item.quantity}</span>
+                        <span className="text-red-500">¥{item.price?.toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end">
+              <div className="mt-6 flex justify-end gap-2">
+                {/* 确认收货按钮 */}
+                {selectedOrder.status === 'shipped' && (
+                  <Button
+                    onClick={() => handleConfirmReceive(selectedOrder.orderId || 0)}
+                    loading={confirmingOrderId === selectedOrder.orderId}
+                  >
+                    确认收货
+                  </Button>
+                )}
                 <Button onClick={() => setSelectedOrder(null)}>关闭</Button>
               </div>
             </CardBody>

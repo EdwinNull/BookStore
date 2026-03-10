@@ -48,24 +48,27 @@ public class UserServiceImpl implements UserService {
     @Override
     public void addBalance(Integer userId, Double balance) {
         userMapper.addBalance(userId, balance);
+        // 注意：根据阶段三的设计，折扣率只与累计消费金额（total_spent）相关
+        // 充值不影响折扣率，只有订单确认收货后累计消费金额才会更新折扣
+        // 信用等级和透支额度保留原有逻辑（与账户余额相关）
         User user = userMapper.findById(userId);
         if(user.getAccountBalance() < 500){
-            userMapper.updateCreditLevel(userId,1,0.10);
+            userMapper.updateCreditLevelOnly(userId, 1);
         }
         if(user.getAccountBalance() >= 500 && user.getAccountBalance() < 1000){
-            userMapper.updateCreditLevel(userId,2,0.15);
+            userMapper.updateCreditLevelOnly(userId, 2);
         }
         if(user.getAccountBalance() >= 1000 && user.getAccountBalance() < 2000){
-            userMapper.updateCreditLevel(userId,3,0.15);
-            userMapper.updateOverBalance(userId,100.00);
+            userMapper.updateCreditLevelOnly(userId, 3);
+            userMapper.updateOverBalance(userId, 100.00);
         }
         if(user.getAccountBalance() >= 2000 && user.getAccountBalance() < 5000){
-            userMapper.updateCreditLevel(userId,4,0.20);
-            userMapper.updateOverBalance(userId,200.00);
+            userMapper.updateCreditLevelOnly(userId, 4);
+            userMapper.updateOverBalance(userId, 200.00);
         }
         if(user.getAccountBalance() >= 5000){
-            userMapper.updateCreditLevel(userId,5,0.25);
-            userMapper.updateOverBalance(userId,500.00);
+            userMapper.updateCreditLevelOnly(userId, 5);
+            userMapper.updateOverBalance(userId, 500.00);
         }
     }
 

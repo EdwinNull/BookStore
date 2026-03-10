@@ -88,4 +88,72 @@ public class SupplierController {
         Suppliers supplier = supplierService.findByName(name);
         return Result.success(supplier);
     }
+
+    /**
+     * 获取所有供应商列表
+     */
+    @Operation(summary = "获取所有供应商", description = "获取所有供应商列表，需要管理员权限")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "获取成功"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录")
+    })
+    @GetMapping("/all")
+    public Result getAllSuppliers() {
+        java.util.List<Suppliers> suppliers = supplierService.findAll();
+        return Result.success(suppliers);
+    }
+
+    /**
+     * 根据状态获取供应商列表
+     */
+    @Operation(summary = "根据状态获取供应商", description = "获取指定状态的供应商列表，需要管理员权限")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "获取成功"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录")
+    })
+    @GetMapping("/status/{status}")
+    public Result getSuppliersByStatus(
+            @Parameter(description = "供应商状态", required = true, example = "pending")
+            @PathVariable("status") String status) {
+        java.util.List<Suppliers> suppliers = supplierService.findByStatus(status);
+        return Result.success(suppliers);
+    }
+
+    /**
+     * 根据ID获取供应商详情
+     */
+    @Operation(summary = "获取供应商详情", description = "根据ID获取供应商详细信息，需要登录")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "获取成功"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "404", description = "供应商不存在")
+    })
+    @GetMapping("/{id}")
+    public Result getById(
+            @Parameter(description = "供应商ID", required = true, example = "1")
+            @PathVariable("id") Integer id) {
+        Suppliers supplier = supplierService.findById(id);
+        if (supplier == null) {
+            return Result.error("供应商不存在");
+        }
+        return Result.success(supplier);
+    }
+
+    /**
+     * 更新供应商状态（管理员审核）
+     */
+    @Operation(summary = "更新供应商状态", description = "审核供应商，更新其状态，需要管理员权限")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "更新成功"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录")
+    })
+    @PutMapping("/status/{id}")
+    public Result updateStatus(
+            @Parameter(description = "供应商ID", required = true, example = "1")
+            @PathVariable("id") Integer id,
+            @Parameter(description = "状态：active-激活，inactive-停用，pending-待审核", required = true, example = "active")
+            @RequestParam String status) {
+        supplierService.updateStatus(id, status);
+        return Result.success("状态更新成功");
+    }
 }

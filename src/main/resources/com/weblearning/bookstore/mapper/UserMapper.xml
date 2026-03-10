@@ -49,8 +49,16 @@
         UPDATE bookstore.users SET password = #{encodePassword} WHERE user_id = #{userId}
     </update>
 
+    <!-- 更新用户信用等级和折扣（旧方法，保留兼容性） -->
     <update id="updateCreditLevel">
-        UPDATE bookstore.users SET credit_level = #{level},discount = #{discount} WHERE user_id = #{userId}
+        UPDATE bookstore.users SET credit_level = #{level}, discount = #{discount} WHERE user_id = #{userId}
+    </update>
+
+    <!-- 只更新用户信用等级（不更新折扣率）
+    折扣率只与累计消费金额相关，由 DiscountService 管理
+    -->
+    <update id="updateCreditLevelOnly">
+        UPDATE bookstore.users SET credit_level = #{level} WHERE user_id = #{userId}
     </update>
 
     <update id="updateOverBalance">
@@ -88,4 +96,27 @@
     <select id="getAllUsers" resultType="com.weblearning.bookstore.pojo.User">
         SELECT * FROM bookstore.users ORDER BY user_id DESC
     </select>
+
+    <!-- ==================== 阶段三：累计消费金额相关 ==================== -->
+
+    <!-- 更新用户累计消费金额 -->
+    <update id="updateTotalSpent">
+        UPDATE bookstore.users
+        SET total_spent = #{totalSpent}
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 更新用户折扣率 -->
+    <update id="updateDiscount">
+        UPDATE bookstore.users
+        SET discount = #{discount}
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 更新折扣更新时间 -->
+    <update id="updateDiscountUpdatedAt">
+        UPDATE bookstore.users
+        SET discount_updated_at = #{discountUpdatedAt}
+        WHERE user_id = #{userId}
+    </update>
 </mapper>

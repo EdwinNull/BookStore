@@ -25,6 +25,28 @@ public class PurchaseController {
     private PurchaseService purchaseService;
 
     /**
+     * 获取所有采购订单列表
+     */
+    @Operation(summary = "获取采购订单列表", description = "获取所有采购订单列表，需要管理员权限")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "获取成功"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录")
+    })
+    @GetMapping("/list")
+    public Result getAllPurchases() {
+        return Result.success(purchaseService.getAllPurchases());
+    }
+
+    /**
+     * 根据状态获取采购订单列表
+     */
+    @Operation(summary = "按状态获取采购订单", description = "根据状态筛选采购订单")
+    @GetMapping("/status/{status}")
+    public Result getPurchasesByStatus(@PathVariable String status) {
+        return Result.success(purchaseService.getPurchasesByStatus(status));
+    }
+
+    /**
      * 添加缺书登记（直接添加）
      */
     @Operation(summary = "添加缺书登记", description = "直接添加缺书登记记录，需要登录")
@@ -106,5 +128,18 @@ public class PurchaseController {
             @PathVariable("missingBookId") Integer missingBookId) {
         MissingBooks missingBooks = purchaseService.getMissingBooksById(missingBookId);
         return Result.success(missingBooks);
+    }
+
+    /**
+     * 获取所有缺书登记列表
+     */
+    @Operation(summary = "获取缺书登记列表", description = "获取所有缺书登记列表，需要管理员权限")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "获取成功"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录")
+    })
+    @GetMapping("/missingBooks/list")
+    public Result getAllMissingBooks() {
+        return Result.success(purchaseService.getAllMissingBooks());
     }
 }

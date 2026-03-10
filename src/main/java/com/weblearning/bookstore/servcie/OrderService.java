@@ -20,4 +20,14 @@ public interface OrderService {
 
     // 获取所有订单列表（管理员用，分页）
     PageBean<Order> getAllOrderList(Integer pageNum, Integer pageSize, String status);
+
+    // ==================== 阶段三：订单确认收货相关 ====================
+
+    /**
+     * 用户确认收货
+     * 确认收货后，将订单状态更新为delivered，并累加用户消费金额
+     * @param orderId 订单ID
+     * @param userId 用户ID（用于权限验证）
+     */
+    void confirmReceive(Integer orderId, Integer userId);
 }

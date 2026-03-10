@@ -1,6 +1,7 @@
 /**
  * Axios 实例封装
  * 统一处理请求拦截、响应拦截、错误处理
+ * 支持用户token和供应商token
  */
 import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
 import type { Result } from '@/types';
@@ -17,11 +18,23 @@ const instance: AxiosInstance = axios.create({
 // 请求拦截器 - 添加 Token
 instance.interceptors.request.use(
   (config) => {
-    // 从 localStorage 获取 token
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // 根据请求URL判断使用哪种token
+    const url = config.url || '';
+
+    // 供应商接口使用 supplier_token
+    if (url.startsWith('/api/supplier/')) {
+      const supplierToken = localStorage.getItem('supplier_token');
+      if (supplierToken) {
+        config.headers.Authorization = `Bearer ${supplierToken}`;
+      }
+    } else {
+      // 其他接口使用普通用户 token
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
+
     // 调试：打印请求信息
     console.log('[Request]', config.method?.toUpperCase(), config.url, config.data);
     return config;
@@ -54,14 +67,24 @@ instance.interceptors.response.use(
 
     // HTTP 错误处理
     if (error.response) {
-      const { status, data } = error.response;
+      const { status, data, config } = error.response;
+      const url = config?.url || '';
+
+      // 判断是否是供应商接口
+      const isSupplierApi = url.startsWith('/api/supplier/');
 
       switch (status) {
         case 401:
-          // 未授权，清除 token 并跳转登录
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
+          // 未授权，根据接口类型清除对应 token 并跳转登录
+          if (isSupplierApi) {
+            localStorage.removeItem('supplier_token');
+            localStorage.removeItem('supplier_info');
+            window.location.href = '/supplier/login';
+          } else {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+          }
           return Promise.reject(new Error('登录已过期，请重新登录'));
         case 403:
           return Promise.reject(new Error('没有权限访问'));

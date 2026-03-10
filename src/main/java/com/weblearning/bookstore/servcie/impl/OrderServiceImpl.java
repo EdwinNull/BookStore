@@ -8,15 +8,22 @@ import com.weblearning.bookstore.mapper.BookMapper;
 import com.weblearning.bookstore.mapper.OrderMapper;
 import com.weblearning.bookstore.mapper.UserMapper;
 import com.weblearning.bookstore.pojo.*;
+import com.weblearning.bookstore.servcie.DiscountService;
 import com.weblearning.bookstore.servcie.OrderService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class OrderServiceImpl implements OrderService {
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
 
     @Autowired
     private OrderMapper orderMapper;
@@ -24,6 +31,8 @@ public class OrderServiceImpl implements OrderService {
     private UserMapper userMapper;
     @Autowired
     private BookMapper bookMapper;
+    @Autowired
+    private DiscountService discountService;
 
     @Override
     public void addOrder(OrderRequest order) {
@@ -145,5 +154,41 @@ public class OrderServiceImpl implements OrderService {
         pageBean.setItems(page.getResult());
 
         return pageBean;
+    }
+
+    /**
+     * 用户确认收货
+     * 确认收货后，将订单状态更新为delivered，并累加用户消费金额
+     * @param orderId 订单ID
+     * @param userId 用户ID（用于权限验证）
+     */
+    @Override
+    @Transactional
+    public void confirmReceive(Integer orderId, Integer userId) {
+        // 1. 获取订单信息
+        Order order = orderMapper.findById(orderId);
+        if (order == null) {
+            throw new RuntimeException("订单不存在");
+        }
+
+        // 2. 验证订单归属（只能确认自己的订单）
+        if (!order.getUserId().equals(userId)) {
+            throw new RuntimeException("无权操作此订单");
+        }
+
+        // 3. 验证订单状态（只有已发货的订单才能确认收货）
+        String currentStatus = order.getStatus();
+        if (!"shipped".equals(currentStatus)) {
+            throw new RuntimeException("订单状态不允许确认收货，当前状态：" + currentStatus);
+        }
+
+        // 4. 更新订单状态为已送达
+        orderMapper.updateStatus(orderId, "delivered");
+
+        // 5. 累加用户消费金额并更新折扣率
+        BigDecimal orderAmount = BigDecimal.valueOf(order.getTotalPrice());
+        discountService.addTotalSpent(userId, orderAmount);
+
+        logger.info("用户确认收货成功：orderId={}, userId={}, amount={}", orderId, userId, orderAmount);
     }
 }

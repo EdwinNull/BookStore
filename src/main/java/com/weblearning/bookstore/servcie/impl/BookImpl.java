@@ -63,4 +63,9 @@ public class BookImpl implements BookService {
     public List<Books> findBookByName(String title, String keywords, String author1, String author2, String author3, String author4, String publisher) {
         return bookMapper.findBookByName(title, keywords, author1, author2, author3, author4, publisher);
     }
+
+    @Override
+    public Books findById(Integer bookId) {
+        return bookMapper.findById(bookId);
+    }
 }

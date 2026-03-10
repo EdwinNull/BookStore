@@ -121,4 +121,30 @@ public class OrderController {
         PageBean<Order> pageBean = orderService.getAllOrderList(pageNum, pageSize, status);
         return Result.success(pageBean);
     }
+
+    /**
+     * 用户确认收货
+     * 确认收货后，订单状态变为delivered，并累加用户消费金额用于折扣计算
+     */
+    @Operation(summary = "确认收货", description = "用户确认收货，需要登录")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "确认成功"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录"),
+        @ApiResponse(responseCode = "400", description = "订单状态不允许确认收货")
+    })
+    @PostMapping("/confirm-receive/{orderId}")
+    public Result confirmReceive(
+            @Parameter(description = "订单ID", required = true, example = "1")
+            @PathVariable("orderId") Integer orderId) {
+        // 从ThreadLocal获取当前用户ID
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Integer userId = (Integer) map.get("userId");
+
+        try {
+            orderService.confirmReceive(orderId, userId);
+            return Result.success("确认收货成功");
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+    }
 }

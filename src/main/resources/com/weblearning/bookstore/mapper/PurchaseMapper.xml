@@ -5,37 +5,130 @@
 
 <mapper namespace="com.weblearning.bookstore.mapper.PurchaseMapper">
 
-    <insert id="addMissStraight" parameterType="com.weblearning.bookstore.pojo.Purchase">
-        INSERT INTO bookstore.missing_books(book_name,publisher, book_id,
-                                           supplier_id, quantity, registration_date, user_id)
-        VALUES (#{bookName},#{publisher}, #{bookId}, #{supplierId},
-                #{quantity}, #{registrationDate}, #{userId})
-    </insert>
-    <insert id="addPurchase" parameterType="com.weblearning.bookstore.pojo.Purchase">
-        INSERT INTO bookstore.purchase_orders( supplier_id, book_id, quantity,
-                                       price, order_date, status)
-        VALUES(#{supplierId}, #{bookId}, #{quantity}, #{price}, NOW(), #{status})
+    <!-- 结果映射 -->
+    <resultMap id="PurchaseResultMap" type="com.weblearning.bookstore.pojo.Purchase">
+        <id property="purchaseOrderId" column="purchase_order_id"/>
+        <result property="supplierId" column="supplier_id"/>
+        <result property="bookId" column="book_id"/>
+        <result property="quantity" column="quantity"/>
+        <result property="price" column="price"/>
+        <result property="orderDate" column="order_date"/>
+        <result property="status" column="status"/>
+        <result property="updateDate" column="update_date"/>
+        <result property="expectedDeliveryDate" column="expected_delivery_date"/>
+        <result property="actualDeliveryDate" column="actual_delivery_date"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="remark" column="remark"/>
+        <result property="supplierName" column="supplier_name"/>
+        <result property="bookTitle" column="book_title"/>
+    </resultMap>
+
+    <!-- 添加采购订单 -->
+    <insert id="addPurchase" parameterType="com.weblearning.bookstore.pojo.Purchase"
+            useGeneratedKeys="true" keyProperty="purchaseOrderId">
+        INSERT INTO purchase_orders (
+            supplier_id, book_id, quantity, price, order_date, status,
+            expected_delivery_date, total_amount, remark
+        ) VALUES (
+            #{supplierId}, #{bookId}, #{quantity}, #{price}, NOW(), #{status},
+            #{expectedDeliveryDate}, #{totalAmount}, #{remark}
+        )
     </insert>
 
+    <!-- 更新采购订单状态 -->
     <update id="updatePurchase">
-        UPDATE bookstore.purchase_orders SET status = #{status} WHERE purchase_order_id = #{purchaseOrderId}
+        UPDATE purchase_orders
+        SET status = #{status}, update_date = NOW()
+        WHERE purchase_order_id = #{purchaseOrderId}
     </update>
 
+    <!-- 更新采购订单（完整） -->
+    <update id="updatePurchaseFull" parameterType="com.weblearning.bookstore.pojo.Purchase">
+        UPDATE purchase_orders
+        <set>
+            <if test="status != null">status = #{status},</if>
+            <if test="expectedDeliveryDate != null">expected_delivery_date = #{expectedDeliveryDate},</if>
+            <if test="actualDeliveryDate != null">actual_delivery_date = #{actualDeliveryDate},</if>
+            <if test="totalAmount != null">total_amount = #{totalAmount},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_date = NOW()
+        </set>
+        WHERE purchase_order_id = #{purchaseOrderId}
+    </update>
+
+    <!-- 删除采购订单 -->
     <delete id="deletePurchase">
-        DELETE FROM bookstore.purchase_orders WHERE purchase_order_id = #{purchaseOrderId}
+        DELETE FROM purchase_orders WHERE purchase_order_id = #{purchaseOrderId}
     </delete>
 
-    <delete id="deleteMissingBooks">
-        DELETE FROM bookstore.missing_books WHERE book_id = #{bookId}
-    </delete>
-
-    <select id="getPurchaseById" resultType="com.weblearning.bookstore.pojo.Purchase">
-        SELECT * FROM bookstore.purchase_orders WHERE purchase_order_id = #{purchaseOrderId}
+    <!-- 根据ID获取采购订单 -->
+    <select id="getPurchaseById" resultMap="PurchaseResultMap">
+        SELECT po.*, s.name as supplier_name, b.title as book_title
+        FROM purchase_orders po
+        LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id
+        LEFT JOIN books b ON po.book_id = b.book_id
+        WHERE po.purchase_order_id = #{purchaseOrderId}
     </select>
+
+    <!-- 获取所有采购订单列表 -->
+    <select id="getAllPurchases" resultMap="PurchaseResultMap">
+        SELECT po.*, s.name as supplier_name, b.title as book_title
+        FROM purchase_orders po
+        LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id
+        LEFT JOIN books b ON po.book_id = b.book_id
+        ORDER BY po.order_date DESC
+    </select>
+
+    <!-- 根据供应商ID获取采购订单列表 -->
+    <select id="getPurchasesBySupplierId" resultMap="PurchaseResultMap">
+        SELECT po.*, s.name as supplier_name, b.title as book_title
+        FROM purchase_orders po
+        LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id
+        LEFT JOIN books b ON po.book_id = b.book_id
+        WHERE po.supplier_id = #{supplierId}
+        ORDER BY po.order_date DESC
+    </select>
+
+    <!-- 根据状态获取采购订单列表 -->
+    <select id="getPurchasesByStatus" resultMap="PurchaseResultMap">
+        SELECT po.*, s.name as supplier_name, b.title as book_title
+        FROM purchase_orders po
+        LEFT JOIN suppliers s ON po.supplier_id = s.supplier_id
+        LEFT JOIN books b ON po.book_id = b.book_id
+        WHERE po.status = #{status}
+        ORDER BY po.order_date DESC
+    </select>
+
+    <!-- 获取供应商的订单统计 -->
+    <select id="getSupplierOrderStats" resultType="map">
+        SELECT
+            COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending,
+            COUNT(CASE WHEN status = 'confirmed' THEN 1 END) as confirmed,
+            COUNT(CASE WHEN status = 'shipped' THEN 1 END) as shipped,
+            COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed,
+            COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected
+        FROM purchase_orders
+        WHERE supplier_id = #{supplierId}
+    </select>
+
+    <!-- ==================== 缺书登记相关 ==================== -->
+
+    <insert id="addMissStraight" parameterType="com.weblearning.bookstore.pojo.MissingBooks">
+        INSERT INTO missing_books(book_name, publisher, book_id, supplier_id, quantity, registration_date, user_id)
+        VALUES (#{bookName}, #{publisher}, #{bookId}, #{supplierId}, #{quantity}, #{registrationDate}, #{userId})
+    </insert>
 
     <select id="getMissingBooksById" resultType="com.weblearning.bookstore.pojo.MissingBooks">
-        SELECT * FROM bookstore.missing_books WHERE missing_books_id = #{missingBookId}
+        SELECT * FROM missing_books WHERE missing_books_id = #{missingBookId}
     </select>
 
+    <!-- 获取所有缺书登记列表 -->
+    <select id="getAllMissingBooks" resultType="com.weblearning.bookstore.pojo.MissingBooks">
+        SELECT * FROM missing_books ORDER BY registration_date DESC
+    </select>
+
+    <delete id="deleteMissingBooks">
+        DELETE FROM missing_books WHERE book_id = #{bookId}
+    </delete>
 
 </mapper>

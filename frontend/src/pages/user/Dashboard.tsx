@@ -3,12 +3,13 @@
  * 显示和编辑用户信息
  */
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardBody, Button, Input, Loading } from '@/components/common';
 import { message } from '@/components/common/Message';
 import { getUserInfo, updateUser, updatePassword } from '@/api/user';
+import { getMyLevel } from '@/api/discount';
 import { useAuthStore } from '@/stores';
-import type { User, UpdatePwdParams } from '@/types';
+import type { User, UpdatePwdParams, UserLevelResponse } from '@/types';
 
 export function UserDashboardPage() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export function UserDashboardPage() {
   const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [levelInfo, setLevelInfo] = useState<UserLevelResponse | null>(null);
 
   // 修改密码表单
   const [pwdForm, setPwdForm] = useState<UpdatePwdParams>({
@@ -43,10 +45,24 @@ export function UserDashboardPage() {
       setUserState(data);
       // 同步更新全局状态
       setUser(data);
+      // 获取用户等级信息
+      fetchLevelInfo();
     } catch (error) {
       message.error('获取用户信息失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLevelInfo = async () => {
+    try {
+      const res = await getMyLevel();
+      if (res.data.code === 0) {
+        setLevelInfo(res.data.data);
+      }
+    } catch (error) {
+      // 获取等级信息失败不影响页面显示
+      console.error('获取等级信息失败', error);
     }
   };
 
@@ -116,6 +132,9 @@ export function UserDashboardPage() {
     );
   }
 
+  // 计算折扣百分比
+  const discountPercent = user.discount ? Math.round((1 - user.discount) * 100) : 0;
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">个人中心</h1>
@@ -155,6 +174,86 @@ export function UserDashboardPage() {
               保存修改
             </Button>
           </div>
+        </CardBody>
+      </Card>
+
+      {/* 会员等级信息卡片（阶段三新增） */}
+      <Card className="mb-6">
+        <CardBody>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">会员等级</h2>
+            <Link
+              to="/user/level"
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              查看等级体系
+            </Link>
+          </div>
+
+          {levelInfo ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
+                <p className="text-sm text-gray-500">当前等级</p>
+                <p className="text-xl font-bold text-yellow-700">
+                  {levelInfo.levelName}
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                <p className="text-sm text-gray-500">累计消费</p>
+                <p className="text-xl font-bold text-green-700">
+                  ¥{levelInfo.totalSpent?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                <p className="text-sm text-gray-500">当前折扣</p>
+                <p className="text-xl font-bold text-blue-700">
+                  {discountPercent > 0 ? `${discountPercent}% OFF` : '无折扣'}
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                <p className="text-sm text-gray-500">距下一等级</p>
+                {levelInfo.nextLevelName ? (
+                  <div>
+                    <p className="text-xl font-bold text-purple-700">
+                      ¥{levelInfo.nextLevelNeeded?.toFixed(2) || '0.00'}
+                    </p>
+                    <p className="text-xs text-purple-500">
+                      升级到 {levelInfo.nextLevelName}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xl font-bold text-purple-700">最高等级</p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-500">当前等级</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {user.creditLevel || 1}级
+                </p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-500">账户余额</p>
+                <p className="text-xl font-bold text-gray-900">
+                  ¥{user.accountBalance?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-500">折扣</p>
+                <p className="text-xl font-bold text-green-600">
+                  {(user.discount || 1) * 10}折
+                </p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-500">角色</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {user.role === 'admin' ? '管理员' : '普通用户'}
+                </p>
+              </div>
+            </div>
+          )}
         </CardBody>
       </Card>
 

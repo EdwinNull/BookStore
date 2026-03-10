@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weblearning.bookstore.mapper.DiscountRuleMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="DiscountRuleResultMap" type="com.weblearning.bookstore.pojo.DiscountRule">
+        <id property="ruleId" column="rule_id"/>
+        <result property="minSpent" column="min_spent"/>
+        <result property="maxSpent" column="max_spent"/>
+        <result property="discountRate" column="discount_rate"/>
+        <result property="levelName" column="level_name"/>
+        <result property="description" column="description"/>
+        <result property="isActive" column="is_active"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- 获取所有启用的折扣规则（按最低消费金额降序排列） -->
+    <select id="findAllActiveRules" resultMap="DiscountRuleResultMap">
+        SELECT * FROM bookstore.discount_rules
+        WHERE is_active = TRUE
+        ORDER BY min_spent DESC
+    </select>
+
+    <!-- 获取所有折扣规则（包括未启用的） -->
+    <select id="findAllRules" resultMap="DiscountRuleResultMap">
+        SELECT * FROM bookstore.discount_rules
+        ORDER BY min_spent ASC
+    </select>
+
+    <!-- 根据累计消费金额获取对应的折扣规则 -->
+    <select id="findByTotalSpent" resultMap="DiscountRuleResultMap">
+        SELECT * FROM bookstore.discount_rules
+        WHERE is_active = TRUE
+          AND min_spent &lt;= #{totalSpent}
+          AND (max_spent IS NULL OR max_spent &gt;= #{totalSpent})
+        ORDER BY min_spent DESC
+        LIMIT 1
+    </select>
+
+    <!-- 根据ID获取折扣规则 -->
+    <select id="findById" resultMap="DiscountRuleResultMap">
+        SELECT * FROM bookstore.discount_rules WHERE rule_id = #{ruleId}
+    </select>
+
+    <!-- 添加新的折扣规则 -->
+    <insert id="insert" parameterType="com.weblearning.bookstore.pojo.DiscountRule">
+        INSERT INTO bookstore.discount_rules
+            (min_spent, max_spent, discount_rate, level_name, description, is_active)
+        VALUES
+            (#{minSpent}, #{maxSpent}, #{discountRate}, #{levelName}, #{description}, #{isActive})
+    </insert>
+
+    <!-- 更新折扣规则 -->
+    <update id="update" parameterType="com.weblearning.bookstore.pojo.DiscountRule">
+        UPDATE bookstore.discount_rules
+        <set>
+            <if test="minSpent != null">
+                min_spent = #{minSpent},
+            </if>
+            <if test="maxSpent != null">
+                max_spent = #{maxSpent},
+            </if>
+            <if test="discountRate != null">
+                discount_rate = #{discountRate},
+            </if>
+            <if test="levelName != null and levelName != ''">
+                level_name = #{levelName},
+            </if>
+            <if test="description != null">
+                description = #{description},
+            </if>
+            <if test="isActive != null">
+                is_active = #{isActive},
+            </if>
+        </set>
+        WHERE rule_id = #{ruleId}
+    </update>
+
+    <!-- 删除折扣规则 -->
+    <delete id="delete">
+        DELETE FROM bookstore.discount_rules WHERE rule_id = #{ruleId}
+    </delete>
+
+    <!-- 切换折扣规则的启用状态 -->
+    <update id="updateStatus">
+        UPDATE bookstore.discount_rules
+        SET is_active = #{isActive}
+        WHERE rule_id = #{ruleId}
+    </update>
+
+</mapper>

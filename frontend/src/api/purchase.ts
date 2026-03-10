@@ -5,10 +5,31 @@ import { get, post, put } from '@/utils/request';
 import type { Purchase, MissingBook } from '@/types';
 
 /**
+ * 获取采购订单列表
+ */
+export function getPurchaseList(): Promise<Purchase[]> {
+  return get('/purchases/list');
+}
+
+/**
+ * 根据状态获取采购订单列表
+ */
+export function getPurchasesByStatus(status: string): Promise<Purchase[]> {
+  return get(`/purchases/status/${status}`);
+}
+
+/**
  * 添加缺书登记
  */
 export function addMissingBook(data: Partial<MissingBook>): Promise<void> {
   return post('/purchases/add1', data);
+}
+
+/**
+ * 获取缺书登记列表
+ */
+export function getMissingBookList(): Promise<MissingBook[]> {
+  return get('/purchases/missingBooks/list');
 }
 
 /**

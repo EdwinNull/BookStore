@@ -4,43 +4,74 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
+/**
+ * 供应商实体类
+ * 包含供应商基本信息和登录认证信息
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Suppliers {
+
+    /**
+     * 供应商ID（主键）
+     */
     private Integer supplierId;
-    private String Name;
-    private String Address;
-    private String ContactInfo;
 
+    /**
+     * 供应商登录账号（唯一）
+     */
+    private String username;
 
+    /**
+     * 密码（MD5加密存储）
+     */
+    private String password;
 
-    public Integer getSupplierId() {
-        return supplierId;
-    }
+    /**
+     * 供应商名称
+     */
+    private String name;
 
-    public void setSupplierId(Integer supplierId) {
-        this.supplierId = supplierId;
-    }
+    /**
+     * 供应商地址
+     */
+    private String address;
 
-    public String getName() {
-        return Name;
-    }
+    /**
+     * 联系方式（备用电话等）
+     */
+    private String contactInfo;
 
-    public void setName(String name) {
-        Name = name;
-    }
+    /**
+     * 联系人姓名
+     */
+    private String contactPerson;
 
-    public String getAddress() {
-        return Address;
-    }
+    /**
+     * 联系电话
+     */
+    private String phone;
 
-    public void setAddress(String address) {
-        Address = address;
-    }
+    /**
+     * 邮箱地址
+     */
+    private String email;
 
-    public String getContactInfo() {
-        return ContactInfo;
-    }
+    /**
+     * 状态：active-激活，inactive-停用，pending-待审核
+     */
+    private String status;
 
-    public void setContactInfo(String contactInfo) {
-        ContactInfo = contactInfo;
-    }
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createdAt;
+
+    /**
+     * 更新时间
+     */
+    private LocalDateTime updatedAt;
 }

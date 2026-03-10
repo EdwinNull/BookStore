@@ -32,9 +32,10 @@ export function getAllUsers(): Promise<User[]> {
 
 /**
  * 添加用户余额
+ * 注意：后端使用 @RequestParam 接收参数，需要将参数拼接到 URL 中
  */
 export function addUserBalance(params: { userId: number; balance: number }): Promise<void> {
-  return put('/api/admin/addBalance', params);
+  return put(`/api/admin/addBalance?userId=${params.userId}&balance=${params.balance}`);
 }
 
 /**

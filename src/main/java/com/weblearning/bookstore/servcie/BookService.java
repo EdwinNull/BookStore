@@ -23,4 +23,6 @@ public interface BookService {
     PageBean<Books> getAllBooks(Integer pageNum, Integer pageSize, Integer supplierId, String title);
 
     List<Books> findBookByName(String title, String keywords, String author1, String author2, String author3, String author4, String publisher);
+
+    Books findById(Integer bookId);
 }

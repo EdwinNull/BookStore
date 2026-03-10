@@ -125,6 +125,7 @@ export interface BookListParams extends PageParams {
 export interface Order {
   orderId: number;
   userId: number;
+  username?: string;       // 用户名，用于列表显示
   totalPrice: number;
   orderDate: string;
   status: string;     // pending, shipped, completed, cancelled
@@ -163,6 +164,8 @@ export interface OrderRequest {
  */
 export interface OrderDetailResponse {
   userId: number;
+  username?: string;       // 用户名
+  realName?: string;       // 用户真实姓名
   finalPrice: number;
   status: string;
   orderDate: string;
@@ -174,6 +177,8 @@ export interface OrderDetailResponse {
  */
 export interface OrderItemResponse {
   bookId: number;
+  bookTitle?: string;      // 图书名称
+  coverImage?: string;     // 封面图片
   quantity: number;
   price: number;
 }
@@ -192,9 +197,53 @@ export interface OrderListParams extends PageParams {
  */
 export interface Supplier {
   supplierId: number;
+  username?: string;          // 登录账号
   name: string;
   address: string;
   contactInfo: string;
+  contactPerson?: string;     // 联系人
+  phone?: string;             // 联系电话
+  email?: string;             // 邮箱
+  status?: string;            // 状态：active/inactive/pending
+  createdAt?: string;         // 创建时间
+  updatedAt?: string;         // 更新时间
+}
+
+/**
+ * 供应商登录参数
+ */
+export interface SupplierLoginParams {
+  username: string;
+  password: string;
+}
+
+/**
+ * 供应商注册参数
+ */
+export interface SupplierRegisterParams {
+  username: string;
+  password: string;
+  name: string;
+  address?: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  contactInfo?: string;
+}
+
+/**
+ * 供应商信息响应
+ */
+export interface SupplierProfileResponse {
+  supplierId: number;
+  username: string;
+  name: string;
+  address: string;
+  contactInfo: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  status: string;
 }
 
 /**
@@ -231,7 +280,13 @@ export interface Purchase {
   price: number;
   orderDate: string;
   status: string;
-  updateDate: string;
+  updateDate?: string;
+  expectedDeliveryDate?: string;
+  actualDeliveryDate?: string;
+  totalAmount?: number;
+  remark?: string;
+  supplierName?: string;    // 供应商名称（联表查询）
+  bookTitle?: string;       // 图书名称（联表查询）
 }
 
 /**
@@ -272,4 +327,32 @@ export interface CartItem {
   bookId: number;
   book: Book;
   quantity: number;
+}
+
+// ==================== 折扣规则相关（阶段三）====================
+
+/**
+ * 折扣规则实体
+ */
+export interface DiscountRule {
+  ruleId: number;
+  minSpent: number;           // 最低消费金额
+  maxSpent: number | null;    // 最高消费金额（null表示无上限）
+  discountRate: number;       // 折扣率（如0.95表示95折）
+  levelName: string;          // 等级名称
+  description: string;        // 等级描述
+  isActive: boolean;          // 是否启用
+}
+
+/**
+ * 用户等级信息响应
+ */
+export interface UserLevelResponse {
+  userId: number;
+  username: string;
+  totalSpent: number;             // 累计消费金额
+  levelName: string;              // 当前会员等级名称
+  discountRate: number;           // 当前折扣率
+  nextLevelNeeded: number | null; // 距离下一等级还需消费的金额
+  nextLevelName: string | null;   // 下一等级名称
 }

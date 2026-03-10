@@ -5,14 +5,17 @@
 import { useState, useEffect } from 'react';
 import { Card, CardBody, CardHeader, Button, Input, Empty } from '@/components/common';
 import { message } from '@/components/common/Message';
-import { addPurchase, addMissingBook, updatePurchaseStatus } from '@/api/purchase';
+import { getPurchaseList, getMissingBookList, addPurchase, addMissingBook, updatePurchaseStatus } from '@/api/purchase';
 import type { Purchase, MissingBook } from '@/types';
 
 // 采购订单状态映射
 const statusMap: Record<string, { label: string; color: string }> = {
   pending: { label: '待处理', color: 'bg-yellow-100 text-yellow-800' },
-  processing: { label: '处理中', color: 'bg-blue-100 text-blue-800' },
+  confirmed: { label: '已确认', color: 'bg-blue-100 text-blue-800' },
+  shipped: { label: '已发货', color: 'bg-purple-100 text-purple-800' },
   completed: { label: '已完成', color: 'bg-green-100 text-green-800' },
+  rejected: { label: '已拒绝', color: 'bg-red-100 text-red-800' },
+  processing: { label: '处理中', color: 'bg-blue-100 text-blue-800' },
   cancelled: { label: '已取消', color: 'bg-gray-100 text-gray-800' },
 };
 
@@ -23,6 +26,7 @@ export function PurchaseManagement() {
   const [activeTab, setActiveTab] = useState<TabType>('purchases');
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [missingBooks, setMissingBooks] = useState<MissingBook[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // 表单状态
   const [showPurchaseForm, setShowPurchaseForm] = useState(false);
@@ -32,6 +36,7 @@ export function PurchaseManagement() {
     bookId: undefined,
     quantity: 1,
     price: 0,
+    status: 'pending',
   });
   const [missingBookForm, setMissingBookForm] = useState<Partial<MissingBook>>({
     bookId: undefined,
@@ -42,48 +47,30 @@ export function PurchaseManagement() {
   });
 
   // 加载数据
-  useEffect(() => {
-    // 模拟数据 - 实际项目中应从后端获取
-    setPurchases([
-      {
-        purchaseOrderId: 1,
-        supplierId: 1,
-        bookId: 1,
-        quantity: 100,
-        price: 50.00,
-        orderDate: '2024-01-15T10:00:00',
-        status: 'completed',
-        updateDate: '2024-01-15T14:00:00',
-      },
-      {
-        purchaseOrderId: 2,
-        supplierId: 2,
-        bookId: 3,
-        quantity: 50,
-        price: 45.00,
-        orderDate: '2024-01-16T09:00:00',
-        status: 'pending',
-        updateDate: '2024-01-16T09:00:00',
-      },
-    ]);
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [purchasesData, missingBooksData] = await Promise.all([
+        getPurchaseList(),
+        getMissingBookList(),
+      ]);
+      setPurchases(purchasesData || []);
+      setMissingBooks(missingBooksData || []);
+    } catch (error) {
+      console.error('加载数据失败:', error);
+      message.error('加载数据失败');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setMissingBooks([
-      {
-        missingBooksId: 1,
-        bookId: 5,
-        bookName: '深入理解计算机系统',
-        supplierId: 1,
-        quantity: 20,
-        registrationDate: '2024-01-14T15:00:00',
-        userId: 1,
-        publisher: '机械工业出版社',
-        requestedQuantity: 20,
-      },
-    ]);
+  useEffect(() => {
+    loadData();
   }, []);
 
   // 格式化日期
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
     try {
       return new Date(dateStr).toLocaleString('zh-CN');
     } catch {
@@ -112,7 +99,9 @@ export function PurchaseManagement() {
         bookId: undefined,
         quantity: 1,
         price: 0,
+        status: 'pending',
       });
+      loadData(); // 刷新列表
     } catch (error) {
       message.error(error instanceof Error ? error.message : '添加失败');
     }
@@ -136,6 +125,7 @@ export function PurchaseManagement() {
         quantity: 1,
         publisher: '',
       });
+      loadData(); // 刷新列表
     } catch (error) {
       message.error(error instanceof Error ? error.message : '添加失败');
     }
@@ -146,10 +136,7 @@ export function PurchaseManagement() {
     try {
       await updatePurchaseStatus(purchaseOrderId, status);
       message.success('状态更新成功');
-      // 更新本地状态
-      setPurchases(purchases.map(p =>
-        p.purchaseOrderId === purchaseOrderId ? { ...p, status } : p
-      ));
+      loadData(); // 刷新列表
     } catch (error) {
       message.error(error instanceof Error ? error.message : '更新失败');
     }
@@ -159,6 +146,9 @@ export function PurchaseManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">采购管理</h1>
+        <Button onClick={loadData} loading={loading}>
+          刷新
+        </Button>
       </div>
 
       {/* 标签页 */}
@@ -172,7 +162,7 @@ export function PurchaseManagement() {
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
-            采购订单
+            采购订单 ({purchases.length})
           </button>
           <button
             onClick={() => setActiveTab('missingBooks')}
@@ -182,7 +172,7 @@ export function PurchaseManagement() {
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
-            缺书登记
+            缺书登记 ({missingBooks.length})
           </button>
         </nav>
       </div>
@@ -197,7 +187,9 @@ export function PurchaseManagement() {
             </Button>
           </CardHeader>
           <CardBody>
-            {purchases.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-8 text-gray-500">加载中...</div>
+            ) : purchases.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -206,16 +198,19 @@ export function PurchaseManagement() {
                         订单ID
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        供应商ID
+                        供应商
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        图书ID
+                        图书
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         数量
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         单价
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        总金额
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         状态
@@ -237,16 +232,19 @@ export function PurchaseManagement() {
                             #{purchase.purchaseOrderId}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {purchase.supplierId}
+                            {purchase.supplierName || purchase.supplierId}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {purchase.bookId}
+                            {purchase.bookTitle || purchase.bookId}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {purchase.quantity}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ¥{purchase.price.toFixed(2)}
+                            ¥{(purchase.price || 0).toFixed(2)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                            ¥{((purchase.totalAmount || (purchase.price || 0) * (purchase.quantity || 0))).toFixed(2)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${status.color}`}>
@@ -262,9 +260,9 @@ export function PurchaseManagement() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleUpdateStatus(purchase.purchaseOrderId, 'processing')}
+                                  onClick={() => handleUpdateStatus(purchase.purchaseOrderId, 'confirmed')}
                                 >
-                                  处理
+                                  确认
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -275,13 +273,22 @@ export function PurchaseManagement() {
                                 </Button>
                               </>
                             )}
-                            {purchase.status === 'processing' && (
+                            {purchase.status === 'confirmed' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleUpdateStatus(purchase.purchaseOrderId, 'shipped')}
+                              >
+                                发货
+                              </Button>
+                            )}
+                            {purchase.status === 'shipped' && (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleUpdateStatus(purchase.purchaseOrderId, 'completed')}
                               >
-                                完成
+                                确认收货
                               </Button>
                             )}
                           </td>
@@ -308,7 +315,9 @@ export function PurchaseManagement() {
             </Button>
           </CardHeader>
           <CardBody>
-            {missingBooks.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-8 text-gray-500">加载中...</div>
+            ) : missingBooks.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -362,6 +371,7 @@ export function PurchaseManagement() {
                                 supplierId: item.supplierId,
                                 quantity: item.quantity,
                                 price: 0,
+                                status: 'pending',
                               });
                               setActiveTab('purchases');
                               setShowPurchaseForm(true);

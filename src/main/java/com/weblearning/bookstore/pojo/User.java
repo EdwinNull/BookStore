@@ -1,5 +1,8 @@
 package com.weblearning.bookstore.pojo;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 public class User {
     private Integer userId;
     private String username;
@@ -11,6 +14,16 @@ public class User {
     private String role;
     private Double discount;
     private Double overBalance;
+
+    /**
+     * 累计消费金额（用于计算会员等级折扣）
+     */
+    private BigDecimal totalSpent;
+
+    /**
+     * 折扣更新时间
+     */
+    private LocalDateTime discountUpdatedAt;
 
     public Double getDiscount() {
         return discount;
@@ -98,6 +111,24 @@ public class User {
 
     public void setUserId(Integer userId) {
         this.userId = userId;
+    }
+
+    // ==================== 累计消费金额相关 ====================
+
+    public BigDecimal getTotalSpent() {
+        return totalSpent;
+    }
+
+    public void setTotalSpent(BigDecimal totalSpent) {
+        this.totalSpent = totalSpent;
+    }
+
+    public LocalDateTime getDiscountUpdatedAt() {
+        return discountUpdatedAt;
+    }
+
+    public void setDiscountUpdatedAt(LocalDateTime discountUpdatedAt) {
+        this.discountUpdatedAt = discountUpdatedAt;
     }
 }
 
